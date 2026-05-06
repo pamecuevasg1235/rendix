@@ -124,6 +124,14 @@ Guarda este archivo como `index.html`.
 
   <h1>📱 Rendix</h1>
 
+<div style="text-align:center;margin-bottom:20px;">
+  <h2 id="nombreRendicion">Rendición Actual</h2>
+</div>
+
+<div class="share" onclick="nuevaRendicion()" style="background:#f59e0b;margin-bottom:20px;">
+  ➕ Nueva Rendición
+</div>
+
   <div class="total">
     <h2>Total Gastos</h2>
     <p id="total">$0</p>
@@ -149,6 +157,10 @@ let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
 const lista = document.getElementById("lista");
 const totalEl = document.getElementById("total");
 const loading = document.getElementById("loading");
+
+const nombreGuardado = localStorage.getItem("rendicionNombre") || "Rendición Actual";
+
+document.getElementById("nombreRendicion").innerText = nombreGuardado;
 
 mostrar();
 
@@ -303,7 +315,29 @@ document.getElementById("fileInput").addEventListener("change", async function(e
 
 });
 
-async function compartirResumen(){
+async function nuevaRendicion(){
+
+  const nombre = prompt("Nombre de la nueva rendición");
+
+  if(!nombre) return;
+
+  if(confirm("¿Deseas borrar la rendición actual y comenzar una nueva?")){
+
+    gastos = [];
+
+    localStorage.removeItem("gastos");
+
+    localStorage.setItem("rendicionNombre", nombre);
+
+    document.getElementById("nombreRendicion").innerText = nombre;
+
+    mostrar();
+
+    alert("✅ Nueva rendición creada");
+  }
+}
+
+function compartirResumen(){
 
   let texto = "🧾 Rendición de Gastos\n\n";
 
@@ -332,4 +366,16 @@ async function compartirResumen(){
 </html>
 ```
 
+## Qué hace esta versión
 
+✅ Saca foto de boletas ✅ Lee texto automáticamente ✅ Detecta monto ✅ Detecta negocio ✅ Clasifica categoría ✅ Evita duplicados ✅ Guarda gastos ✅ Suma total automático ✅ Comparte resumen ✅ Funciona desde celular
+
+## Cómo usarla
+
+1. Crear repositorio en entity["company","GitHub","code hosting platform"]
+2. Subir archivo `index.html`
+3. Activar GitHub Pages
+4. Abrir el link desde el celular
+5. Agregar a pantalla principal
+
+Y quedará como app instalada 📱
