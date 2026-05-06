@@ -1,0 +1,335 @@
+# Rendix — Fase 1
+
+Guarda este archivo como `index.html`.
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendix</title>
+
+  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      background:#111827;
+      color:white;
+      padding:20px;
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+      font-size:32px;
+    }
+
+    .total{
+      background:#1f2937;
+      padding:20px;
+      border-radius:20px;
+      margin-bottom:20px;
+      text-align:center;
+      box-shadow:0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .total h2{
+      font-size:18px;
+      color:#9ca3af;
+      margin-bottom:10px;
+    }
+
+    .total p{
+      font-size:36px;
+      font-weight:bold;
+      color:#10b981;
+    }
+
+    .upload{
+      background:#2563eb;
+      padding:18px;
+      text-align:center;
+      border-radius:20px;
+      margin-bottom:20px;
+      cursor:pointer;
+      font-weight:bold;
+      font-size:18px;
+    }
+
+    input{
+      display:none;
+    }
+
+    .card{
+      background:#1f2937;
+      border-radius:20px;
+      padding:15px;
+      margin-bottom:15px;
+    }
+
+    .card img{
+      width:100%;
+      border-radius:15px;
+      margin-bottom:10px;
+    }
+
+    .card h3{
+      margin-bottom:8px;
+    }
+
+    .card p{
+      margin-bottom:5px;
+      color:#d1d5db;
+    }
+
+    .btn{
+      background:#ef4444;
+      border:none;
+      padding:10px 15px;
+      border-radius:12px;
+      color:white;
+      cursor:pointer;
+      margin-top:10px;
+      width:100%;
+    }
+
+    .loading{
+      text-align:center;
+      margin-bottom:20px;
+      color:#facc15;
+      font-weight:bold;
+    }
+
+    .share{
+      background:#10b981;
+      padding:15px;
+      text-align:center;
+      border-radius:20px;
+      margin-top:20px;
+      cursor:pointer;
+      font-weight:bold;
+      font-size:18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📱 Rendix</h1>
+
+  <div class="total">
+    <h2>Total Gastos</h2>
+    <p id="total">$0</p>
+  </div>
+
+  <label class="upload">
+    📸 Escanear Boleta
+    <input type="file" accept="image/*" capture="environment" id="fileInput">
+  </label>
+
+  <div class="loading" id="loading"></div>
+
+  <div id="lista"></div>
+
+  <div class="share" onclick="compartirResumen()">
+    📤 Compartir Rendición
+  </div>
+
+<script>
+
+let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
+
+const lista = document.getElementById("lista");
+const totalEl = document.getElementById("total");
+const loading = document.getElementById("loading");
+
+mostrar();
+
+function guardar(){
+  localStorage.setItem("gastos", JSON.stringify(gastos));
+}
+
+function mostrar(){
+
+  lista.innerHTML = "";
+
+  let total = 0;
+
+  gastos.forEach((gasto,index)=>{
+
+    total += gasto.monto;
+
+    lista.innerHTML += `
+      <div class="card">
+        <img src="${gasto.imagen}">
+
+        <h3>${gasto.negocio}</h3>
+
+        <p>💰 $${gasto.monto.toLocaleString('es-CL')}</p>
+        <p>📅 ${gasto.fecha}</p>
+        <p>📂 ${gasto.categoria}</p>
+
+        <button class="btn" onclick="eliminar(${index})">
+          Eliminar
+        </button>
+      </div>
+    `;
+  });
+
+  totalEl.innerText = "$" + total.toLocaleString('es-CL');
+}
+
+function eliminar(index){
+  gastos.splice(index,1);
+  guardar();
+  mostrar();
+}
+
+function detectarCategoria(texto){
+
+  texto = texto.toLowerCase();
+
+  if(texto.includes("copec") || texto.includes("shell") || texto.includes("petrobras")){
+    return "Combustible";
+  }
+
+  if(texto.includes("peaje")){
+    return "Peajes";
+  }
+
+  if(texto.includes("sodimac") || texto.includes("constru")){
+    return "Materiales";
+  }
+
+  return "Otros";
+}
+
+function detectarMonto(texto){
+
+  const numeros = texto.match(/\d+[\.,]?\d*/g);
+
+  if(!numeros) return 0;
+
+  let mayor = 0;
+
+  numeros.forEach(n=>{
+    let limpio = parseInt(n.replace(/\./g,""));
+
+    if(limpio > mayor){
+      mayor = limpio;
+    }
+  });
+
+  return mayor;
+}
+
+function detectarNegocio(texto){
+
+  texto = texto.toUpperCase();
+
+  if(texto.includes("COPEC")) return "Copec";
+  if(texto.includes("SHELL")) return "Shell";
+  if(texto.includes("SODIMAC")) return "Sodimac";
+  if(texto.includes("LIDER")) return "Lider";
+
+  return "Boleta";
+}
+
+function duplicado(monto,negocio){
+
+  return gastos.some(g=>
+    g.monto === monto && g.negocio === negocio
+  );
+}
+
+
+document.getElementById("fileInput").addEventListener("change", async function(e){
+
+  const archivo = e.target.files[0];
+
+  if(!archivo) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async function(){
+
+    const imagen = reader.result;
+
+    loading.innerText = "⏳ Leyendo boleta...";
+
+    const resultado = await Tesseract.recognize(imagen,'spa');
+
+    const texto = resultado.data.text;
+
+    const monto = detectarMonto(texto);
+    const negocio = detectarNegocio(texto);
+    const categoria = detectarCategoria(texto);
+
+    const fecha = new Date().toLocaleDateString('es-CL');
+
+    if(duplicado(monto,negocio)){
+      alert("⚠️ Posible boleta duplicada");
+      loading.innerText = "";
+      return;
+    }
+
+    gastos.unshift({
+      imagen,
+      monto,
+      negocio,
+      categoria,
+      fecha
+    });
+
+    guardar();
+    mostrar();
+
+    loading.innerText = "✅ Boleta registrada";
+
+    setTimeout(()=>{
+      loading.innerText = "";
+    },2000);
+
+  }
+
+  reader.readAsDataURL(archivo);
+
+});
+
+async function compartirResumen(){
+
+  let texto = "🧾 Rendición de Gastos\n\n";
+
+  let total = 0;
+
+  gastos.forEach(g=>{
+    texto += `${g.negocio} - $${g.monto.toLocaleString('es-CL')}\n`;
+    total += g.monto;
+  });
+
+  texto += `\nTOTAL: $${total.toLocaleString('es-CL')}`;
+
+  if(navigator.share){
+    navigator.share({
+      title:"Rendición",
+      text:texto
+    });
+  }else{
+    alert(texto);
+  }
+}
+
+</script>
+
+</body>
+</html>
+```
+
+
