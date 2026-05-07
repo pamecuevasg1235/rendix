@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rendix</title>
+<title>Rendix Pro</title>
 
 <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
 
@@ -15,82 +15,136 @@ body{
     background:#071330;
     color:white;
     font-family:Arial,sans-serif;
-    text-align:center;
 }
 
 .container{
-    padding:30px;
+    max-width:650px;
+    margin:auto;
+    padding:20px;
 }
 
 h1{
+    text-align:center;
+    font-size:52px;
+    margin-bottom:5px;
+}
+
+.sub{
+    text-align:center;
+    color:#9db2d8;
+    margin-bottom:25px;
+}
+
+.card{
+    background:#13213f;
+    border-radius:25px;
+    padding:25px;
+    margin-bottom:20px;
+}
+
+.total{
     font-size:60px;
-    margin-bottom:10px;
+    font-weight:bold;
+    color:#00e28f;
+    text-align:center;
 }
 
 button{
     width:100%;
     border:none;
-    border-radius:25px;
-    padding:28px;
-    font-size:22px;
+    border-radius:18px;
+    padding:18px;
+    margin-top:12px;
+    font-size:18px;
     font-weight:bold;
-    margin-top:20px;
     color:white;
-}
-
-.nueva{
-    background:#f7a400;
 }
 
 .scan{
     background:#2d63f0;
 }
 
+.manual{
+    background:#865dff;
+}
+
 .share{
     background:#12c48b;
 }
 
-.card{
-    background:#1a2745;
-    border-radius:25px;
-    padding:30px;
-    margin-top:25px;
-}
-
-.total{
-    color:#00e28f;
-    font-size:70px;
-    font-weight:bold;
-}
-
-#estado{
-    color:#ffd24d;
-    font-size:20px;
-    margin-top:10px;
-    font-weight:bold;
-}
-
-.lista{
-    margin-top:20px;
-    text-align:left;
+.reset{
+    background:#ff9800;
 }
 
 .item{
-    background:#12203d;
+    background:#10203d;
+    border-radius:18px;
     padding:15px;
-    border-radius:15px;
-    margin-bottom:10px;
+    margin-bottom:12px;
     display:flex;
     justify-content:space-between;
     align-items:center;
 }
 
+.nombre{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.monto{
+    color:#00e28f;
+    margin-top:4px;
+}
+
 .eliminar{
-    background:red;
+    background:#ff4d4d;
+    width:auto;
+    padding:10px 14px;
+    margin:0;
+}
+
+#estado{
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+    color:#ffd24d;
+}
+
+.modal{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-content{
+    background:#13213f;
+    width:85%;
+    padding:25px;
+    border-radius:20px;
+}
+
+input{
+    width:100%;
+    padding:16px;
     border:none;
-    color:white;
-    padding:10px 15px;
-    border-radius:10px;
+    border-radius:14px;
+    margin-top:12px;
+    font-size:17px;
+    box-sizing:border-box;
+}
+
+.guardar{
+    background:#12c48b;
+}
+
+.cerrar{
+    background:#ff5b5b;
 }
 
 </style>
@@ -100,11 +154,8 @@ button{
 
 <div class="container">
 
-<h1>📱 Rendix</h1>
-
-<button class="nueva" onclick="nuevaRendicion()">
-➕ Nueva Rendición
-</button>
+<h1>📱 Rendix Pro</h1>
+<div class="sub">Controla y comparte tus rendiciones</div>
 
 <div class="card">
 <h3>Total Gastos</h3>
@@ -115,13 +166,45 @@ button{
 📸 Escanear Boleta
 </button>
 
-<div id="estado"></div>
+<button class="manual" onclick="abrirManual()">
+✍️ Agregar Manualmente
+</button>
 
 <button class="share" onclick="compartir()">
 📤 Compartir Rendición
 </button>
 
-<div class="lista" id="lista"></div>
+<button class="reset" onclick="nuevaRendicion()">
+🗑️ Nueva Rendición
+</button>
+
+<div id="estado"></div>
+
+<div id="lista"></div>
+
+</div>
+
+<div class="modal" id="modal">
+
+<div class="modal-content">
+
+<h2>Nuevo Gasto</h2>
+
+<input type="text" id="nombreManual"
+placeholder="Ej: Lider">
+
+<input type="number" id="montoManual"
+placeholder="Monto">
+
+<button class="guardar" onclick="guardarManual()">
+Guardar
+</button>
+
+<button class="cerrar" onclick="cerrarManual()">
+Cerrar
+</button>
+
+</div>
 
 </div>
 
@@ -135,51 +218,12 @@ function guardar(){
     localStorage.setItem("gastos", JSON.stringify(gastos));
 }
 
-function nuevaRendicion(){
-
-    if(confirm("¿Borrar rendición actual y comenzar otra?")){
-        gastos = [];
-        guardar();
-        mostrar();
-    }
-}
-
-function agregarGasto(gasto){
-
-    let existe = gastos.some(g =>
-        g.monto === gasto.monto &&
-        g.nombre === gasto.nombre
-    );
-
-    if(existe){
-        alert("Esta boleta ya fue agregada");
-        return;
-    }
-
-    gastos.push({
-        id:Date.now(),
-        nombre:gasto.nombre,
-        monto:gasto.monto
-    });
-
-    guardar();
-    mostrar();
-}
-
-function eliminar(id){
-
-    gastos = gastos.filter(g => g.id !== id);
-
-    guardar();
-    mostrar();
-}
-
 function mostrar(){
 
     let lista = document.getElementById("lista");
-    let total = 0;
-
     lista.innerHTML = "";
+
+    let total = 0;
 
     gastos.forEach(g=>{
 
@@ -187,15 +231,19 @@ function mostrar(){
 
         lista.innerHTML += `
         <div class="item">
+
             <div>
-                <strong>${g.nombre}</strong><br>
+                <div class="nombre">${g.nombre}</div>
+                <div class="monto">
                 $${g.monto.toLocaleString("es-CL")}
+                </div>
             </div>
 
             <button class="eliminar"
             onclick="eliminar(${g.id})">
             ✖
             </button>
+
         </div>
         `;
     });
@@ -204,106 +252,241 @@ function mostrar(){
     "$" + total.toLocaleString("es-CL");
 }
 
+function eliminar(id){
+
+    gastos = gastos.filter(g=>g.id !== id);
+
+    guardar();
+    mostrar();
+}
+
+function nuevaRendicion(){
+
+    if(confirm("¿Comenzar nueva rendición?")){
+
+        gastos = [];
+
+        guardar();
+
+        mostrar();
+    }
+}
+
+function abrirManual(){
+
+    document.getElementById("modal").style.display = "flex";
+}
+
+function cerrarManual(){
+
+    document.getElementById("modal").style.display = "none";
+}
+
+function guardarManual(){
+
+    let nombre =
+    document.getElementById("nombreManual").value;
+
+    let monto =
+    parseInt(document.getElementById("montoManual").value);
+
+    if(!nombre || !monto){
+        alert("Completa los datos");
+        return;
+    }
+
+    gastos.push({
+        id:Date.now(),
+        nombre,
+        monto
+    });
+
+    guardar();
+
+    mostrar();
+
+    cerrarManual();
+
+    document.getElementById("nombreManual").value="";
+    document.getElementById("montoManual").value="";
+}
+
 async function escanearBoleta(){
 
-  let input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.capture = "environment";
+    let input = document.createElement("input");
 
-  input.onchange = async e => {
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
 
-    let file = e.target.files[0];
-    if(!file) return;
+    input.onchange = async e => {
 
-    document.getElementById("estado").innerText =
-      "⏳ Leyendo boleta...";
+        let file = e.target.files[0];
 
-    try{
+        if(!file) return;
 
-      const { data:{ text } } =
-      await Tesseract.recognize(
-        file,
-        "spa"
-      );
+        document.getElementById("estado").innerText =
+        "⏳ Leyendo boleta...";
 
-      console.log(text);
+        try{
 
-      let lineas = text.split("\n");
+            const { data:{ text } } =
+            await Tesseract.recognize(file,"spa");
 
-      let total = null;
+            console.log(text);
 
-      for(let linea of lineas){
+            let lineas = text.split("\n");
 
-        let texto = linea.toUpperCase();
+            let nombre = "Boleta";
+            let total = null;
 
-        if(
-          texto.includes("TOTAL") ||
-          texto.includes("TOTAL VENTA") ||
-          texto.includes("MONTO TOTAL")
-        ){
+            for(let linea of lineas){
 
-          let encontrado =
-          linea.match(/\$?\s?\d{1,3}(?:[.\,]\d{3})+/);
+                let txt = linea.toUpperCase();
 
-          if(encontrado){
+                if(
+                    txt.includes("LIDER")
+                ){
+                    nombre = "Supermercado Lider";
+                }
 
-            total = parseInt(
-              encontrado[0]
-              .replace(/\$/g,"")
-              .replace(/\./g,"")
-              .replace(/,/g,"")
+                else if(
+                    txt.includes("UNIMARC")
+                ){
+                    nombre = "Unimarc";
+                }
+
+                else if(
+                    txt.includes("COPEC")
+                ){
+                    nombre = "Copec";
+                }
+
+                else if(
+                    txt.includes("SANTA ISABEL")
+                ){
+                    nombre = "Santa Isabel";
+                }
+
+                else if(
+                    txt.includes("JUMBO")
+                ){
+                    nombre = "Jumbo";
+                }
+
+                if(
+                    txt.includes("TOTAL") ||
+                    txt.includes("TOTAL VENTA") ||
+                    txt.includes("TOTAL:") ||
+                    txt.includes("MONTO TOTAL") ||
+                    txt.includes("TOTAL A PAGAR") ||
+                    txt.includes("TOTAI")
+                ){
+
+                    let encontrado =
+                    linea.match(/\$?\s?\d{1,3}(?:[.\,]\d{3})+/);
+
+                    if(encontrado){
+
+                        total = parseInt(
+                            encontrado[0]
+                            .replace(/\$/g,"")
+                            .replace(/\./g,"")
+                            .replace(/,/g,"")
+                        );
+                    }
+                }
+            }
+
+            if(!total){
+
+                let numeros =
+                text.match(/\$?\s?\d{1,3}(?:[.\,]\d{3})+/g);
+
+                if(numeros){
+
+                    let montos = numeros.map(n=>{
+                        return parseInt(
+                            n.replace(/\$/g,"")
+                             .replace(/\./g,"")
+                             .replace(/,/g,"")
+                        );
+                    });
+
+                    total = montos[montos.length-1];
+                }
+            }
+
+            if(!total){
+
+                alert("No pude leer el total");
+
+                document.getElementById("estado").innerText="";
+
+                return;
+            }
+
+            let existe = gastos.some(g =>
+                g.nombre === nombre &&
+                g.monto === total
             );
 
-            break;
-          }
+            if(existe){
+
+                alert("Boleta ya agregada");
+
+                document.getElementById("estado").innerText="";
+
+                return;
+            }
+
+            gastos.push({
+                id:Date.now(),
+                nombre,
+                monto:total
+            });
+
+            guardar();
+
+            mostrar();
+
+            document.getElementById("estado").innerText =
+            "✅ Boleta agregada";
+
+        }catch(err){
+
+            console.log(err);
+
+            alert("Error leyendo boleta");
+
+            document.getElementById("estado").innerText="";
         }
-      }
+    };
 
-      if(!total){
-
-        alert("No encontré el total de la boleta");
-        document.getElementById("estado").innerText="";
-        return;
-      }
-
-      agregarGasto({
-        nombre:"Boleta",
-        monto:total
-      });
-
-      document.getElementById("estado").innerText =
-      "✅ Boleta agregada";
-
-    }catch(err){
-
-      console.log(err);
-
-      alert("Error leyendo boleta");
-
-      document.getElementById("estado").innerText="";
-    }
-  };
-
-  input.click();
+    input.click();
 }
 
 function compartir(){
 
-    let texto = "📋 Rendición de Gastos\n\n";
+    let texto =
+    "📋 Rendición de Gastos\n\n";
 
     gastos.forEach(g=>{
-        texto += `${g.nombre}: $${g.monto.toLocaleString("es-CL")}\n`;
+
+        texto +=
+        `${g.nombre}: $${g.monto.toLocaleString("es-CL")}\n`;
     });
 
-    let total = gastos.reduce((a,b)=>a+b.monto,0);
+    let total =
+    gastos.reduce((a,b)=>a+b.monto,0);
 
-    texto += `\nTOTAL: $${total.toLocaleString("es-CL")}`;
+    texto +=
+    `\nTOTAL: $${total.toLocaleString("es-CL")}`;
 
     if(navigator.share){
 
         navigator.share({
-            title:"Rendix",
+            title:"Rendix Pro",
             text:texto
         });
 
@@ -311,7 +494,7 @@ function compartir(){
 
         navigator.clipboard.writeText(texto);
 
-        alert("Resumen copiado. Ahora puedes pegarlo en WhatsApp.");
+        alert("Resumen copiado");
     }
 }
 
