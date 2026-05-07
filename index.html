@@ -94,6 +94,13 @@ button{
 .monto{
     color:#00e28f;
     margin-top:4px;
+    font-size:18px;
+}
+
+.factura{
+    color:#9db2d8;
+    margin-top:5px;
+    font-size:14px;
 }
 
 .eliminar{
@@ -191,7 +198,10 @@ input{
 <h2>Nuevo Gasto</h2>
 
 <input type="text" id="nombreManual"
-placeholder="Ej: Lider">
+placeholder="Lugar / Comercio">
+
+<input type="text" id="facturaManual"
+placeholder="Número de factura">
 
 <input type="number" id="montoManual"
 placeholder="Monto">
@@ -234,8 +244,13 @@ function mostrar(){
 
             <div>
                 <div class="nombre">${g.nombre}</div>
+
                 <div class="monto">
                 $${g.monto.toLocaleString("es-CL")}
+                </div>
+
+                <div class="factura">
+                ${g.numeroFactura ? "Factura: " + g.numeroFactura : ""}
                 </div>
             </div>
 
@@ -257,6 +272,7 @@ function eliminar(id){
     gastos = gastos.filter(g=>g.id !== id);
 
     guardar();
+
     mostrar();
 }
 
@@ -287,6 +303,9 @@ function guardarManual(){
     let nombre =
     document.getElementById("nombreManual").value;
 
+    let factura =
+    document.getElementById("facturaManual").value;
+
     let monto =
     parseInt(document.getElementById("montoManual").value);
 
@@ -298,7 +317,8 @@ function guardarManual(){
     gastos.push({
         id:Date.now(),
         nombre,
-        monto
+        monto,
+        numeroFactura:factura
     });
 
     guardar();
@@ -308,6 +328,7 @@ function guardarManual(){
     cerrarManual();
 
     document.getElementById("nombreManual").value="";
+    document.getElementById("facturaManual").value="";
     document.getElementById("montoManual").value="";
 }
 
@@ -339,39 +360,47 @@ async function escanearBoleta(){
 
             let nombre = "Boleta";
             let total = null;
+            let factura = "";
 
             for(let linea of lineas){
 
                 let txt = linea.toUpperCase();
 
-                if(
-                    txt.includes("LIDER")
-                ){
+                if(txt.includes("LIDER")){
                     nombre = "Supermercado Lider";
                 }
 
-                else if(
-                    txt.includes("UNIMARC")
-                ){
+                else if(txt.includes("UNIMARC")){
                     nombre = "Unimarc";
                 }
 
-                else if(
-                    txt.includes("COPEC")
-                ){
+                else if(txt.includes("COPEC")){
                     nombre = "Copec";
                 }
 
-                else if(
-                    txt.includes("SANTA ISABEL")
-                ){
+                else if(txt.includes("SANTA ISABEL")){
                     nombre = "Santa Isabel";
                 }
 
-                else if(
-                    txt.includes("JUMBO")
-                ){
+                else if(txt.includes("JUMBO")){
                     nombre = "Jumbo";
+                }
+
+                else if(txt.includes("ACUENTA")){
+                    nombre = "Acuenta";
+                }
+
+                if(
+                    txt.includes("FACTURA") ||
+                    txt.includes("FOLIO") ||
+                    txt.includes("DOCUMENTO")
+                ){
+
+                    let num = linea.match(/\d{3,}/);
+
+                    if(num){
+                        factura = num[0];
+                    }
                 }
 
                 if(
@@ -419,7 +448,7 @@ async function escanearBoleta(){
 
             if(!total){
 
-                alert("No pude leer el total");
+                alert("No pude leer el total. Agrégalo manualmente.");
 
                 document.getElementById("estado").innerText="";
 
@@ -428,7 +457,8 @@ async function escanearBoleta(){
 
             let existe = gastos.some(g =>
                 g.nombre === nombre &&
-                g.monto === total
+                g.monto === total &&
+                g.numeroFactura === factura
             );
 
             if(existe){
@@ -443,7 +473,8 @@ async function escanearBoleta(){
             gastos.push({
                 id:Date.now(),
                 nombre,
-                monto:total
+                monto:total,
+                numeroFactura:factura
             });
 
             guardar();
@@ -469,19 +500,27 @@ async function escanearBoleta(){
 function compartir(){
 
     let texto =
-    "📋 Rendición de Gastos\n\n";
+`📋 RENDICIÓN DE GASTOS
+
+`;
 
     gastos.forEach(g=>{
 
         texto +=
-        `${g.nombre}: $${g.monto.toLocaleString("es-CL")}\n`;
+`────────────────────
+Factura: ${g.numeroFactura || "-"}
+Lugar: ${g.nombre}
+Total: $${g.monto.toLocaleString("es-CL")}
+────────────────────
+
+`;
     });
 
     let total =
     gastos.reduce((a,b)=>a+b.monto,0);
 
     texto +=
-    `\nTOTAL: $${total.toLocaleString("es-CL")}`;
+`TOTAL GENERAL: $${total.toLocaleString("es-CL")}`;
 
     if(navigator.share){
 
