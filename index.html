@@ -1,358 +1,301 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rendix</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendix</title>
 
-  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial, sans-serif;
-    }
+<style>
 
-    body{
-      background:#111827;
-      color:white;
-      padding:20px;
-    }
+body{
+    margin:0;
+    padding:0;
+    background:#071330;
+    color:white;
+    font-family:Arial,sans-serif;
+    text-align:center;
+}
 
-    h1{
-      text-align:center;
-      margin-bottom:20px;
-      font-size:32px;
-    }
+.container{
+    padding:30px;
+}
 
-    .total{
-      background:#1f2937;
-      padding:20px;
-      border-radius:20px;
-      margin-bottom:20px;
-      text-align:center;
-      box-shadow:0 0 10px rgba(0,0,0,0.3);
-    }
+h1{
+    font-size:60px;
+    margin-bottom:10px;
+}
 
-    .total h2{
-      font-size:18px;
-      color:#9ca3af;
-      margin-bottom:10px;
-    }
+h2{
+    font-size:45px;
+}
 
-    .total p{
-      font-size:36px;
-      font-weight:bold;
-      color:#10b981;
-    }
+button{
+    width:100%;
+    border:none;
+    border-radius:25px;
+    padding:28px;
+    font-size:22px;
+    font-weight:bold;
+    margin-top:20px;
+    color:white;
+}
 
-    .upload{
-      background:#2563eb;
-      padding:18px;
-      text-align:center;
-      border-radius:20px;
-      margin-bottom:20px;
-      cursor:pointer;
-      font-weight:bold;
-      font-size:18px;
-    }
+.nueva{
+    background:#f7a400;
+}
 
-    input{
-      display:none;
-    }
+.scan{
+    background:#2d63f0;
+}
 
-    .card{
-      background:#1f2937;
-      border-radius:20px;
-      padding:15px;
-      margin-bottom:15px;
-    }
+.share{
+    background:#12c48b;
+}
 
-    .card img{
-      width:100%;
-      border-radius:15px;
-      margin-bottom:10px;
-    }
+.card{
+    background:#1a2745;
+    border-radius:25px;
+    padding:30px;
+    margin-top:25px;
+}
 
-    .card h3{
-      margin-bottom:8px;
-    }
+.total{
+    color:#00e28f;
+    font-size:70px;
+    font-weight:bold;
+}
 
-    .card p{
-      margin-bottom:5px;
-      color:#d1d5db;
-    }
+#estado{
+    color:#ffd24d;
+    font-size:20px;
+    margin-top:10px;
+    font-weight:bold;
+}
 
-    .btn{
-      background:#ef4444;
-      border:none;
-      padding:10px 15px;
-      border-radius:12px;
-      color:white;
-      cursor:pointer;
-      margin-top:10px;
-      width:100%;
-    }
+.lista{
+    margin-top:20px;
+    text-align:left;
+}
 
-    .loading{
-      text-align:center;
-      margin-bottom:20px;
-      color:#facc15;
-      font-weight:bold;
-    }
+.item{
+    background:#12203d;
+    padding:15px;
+    border-radius:15px;
+    margin-bottom:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
 
-    .share{
-      background:#10b981;
-      padding:15px;
-      text-align:center;
-      border-radius:20px;
-      margin-top:20px;
-      cursor:pointer;
-      font-weight:bold;
-      font-size:18px;
-    }
-  </style>
+.eliminar{
+    background:red;
+    border:none;
+    color:white;
+    padding:10px 15px;
+    border-radius:10px;
+}
+
+</style>
 </head>
+
 <body>
 
-  <h1>📱 Rendix</h1>
+<div class="container">
 
-<div style="text-align:center;margin-bottom:20px;">
-  <h2 id="nombreRendicion">Rendición Actual</h2>
+<h1>📱 Rendix</h1>
+
+<h2 id="nombreRendicion">mayo</h2>
+
+<button class="nueva" onclick="nuevaRendicion()">
+➕ Nueva Rendición
+</button>
+
+<div class="card">
+<h3>Total Gastos</h3>
+<div class="total" id="total">$0</div>
 </div>
 
-<div class="share" onclick="nuevaRendicion()" style="background:#f59e0b;margin-bottom:20px;">
-  ➕ Nueva Rendición
+<button class="scan" onclick="escanearBoleta()">
+📸 Escanear Boleta
+</button>
+
+<div id="estado"></div>
+
+<button class="share" onclick="compartir()">
+📤 Compartir Rendición
+</button>
+
+<div class="lista" id="lista"></div>
+
 </div>
-
-  <div class="total">
-    <h2>Total Gastos</h2>
-    <p id="total">$0</p>
-  </div>
-
-  <label class="upload">
-    📸 Escanear Boleta
-    <input type="file" accept="image/*" capture="environment" id="fileInput">
-  </label>
-
-  <div class="loading" id="loading"></div>
-
-  <div id="lista"></div>
-
-  <div class="share" onclick="compartirResumen()">
-    📤 Compartir Rendición
-  </div>
 
 <script>
 
 let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
 
-const lista = document.getElementById("lista");
-const totalEl = document.getElementById("total");
-const loading = document.getElementById("loading");
-
-const nombreGuardado = localStorage.getItem("rendicionNombre") || "Rendición Actual";
-
-document.getElementById("nombreRendicion").innerText = nombreGuardado;
-
 mostrar();
 
 function guardar(){
-  localStorage.setItem("gastos", JSON.stringify(gastos));
+    localStorage.setItem("gastos", JSON.stringify(gastos));
 }
 
-function mostrar(){
+function nuevaRendicion(){
 
-  lista.innerHTML = "";
-
-  let total = 0;
-
-  gastos.forEach((gasto,index)=>{
-
-    total += gasto.monto;
-
-    lista.innerHTML += `
-      <div class="card">
-        <img src="${gasto.imagen}">
-
-        <h3>${gasto.negocio}</h3>
-
-        <p>💰 $${gasto.monto.toLocaleString('es-CL')}</p>
-        <p>📅 ${gasto.fecha}</p>
-        <p>📂 ${gasto.categoria}</p>
-
-        <button class="btn" onclick="eliminar(${index})">
-          Eliminar
-        </button>
-      </div>
-    `;
-  });
-
-  totalEl.innerText = "$" + total.toLocaleString('es-CL');
-}
-
-function eliminar(index){
-  gastos.splice(index,1);
-  guardar();
-  mostrar();
-}
-
-function detectarCategoria(texto){
-
-  texto = texto.toLowerCase();
-
-  if(texto.includes("copec") || texto.includes("shell") || texto.includes("petrobras")){
-    return "Combustible";
-  }
-
-  if(texto.includes("peaje")){
-    return "Peajes";
-  }
-
-  if(texto.includes("sodimac") || texto.includes("constru")){
-    return "Materiales";
-  }
-
-  return "Otros";
-}
-
-function detectarMonto(texto){
-
-  const numeros = texto.match(/\d+[\.,]?\d*/g);
-
-  if(!numeros) return 0;
-
-  let mayor = 0;
-
-  numeros.forEach(n=>{
-    let limpio = parseInt(n.replace(/\./g,""));
-
-    if(limpio > mayor){
-      mayor = limpio;
+    if(confirm("¿Borrar rendición actual y comenzar otra?")){
+        gastos = [];
+        guardar();
+        mostrar();
     }
-  });
-
-  return mayor;
 }
 
-function detectarNegocio(texto){
+function agregarGasto(gasto){
 
-  texto = texto.toUpperCase();
+    // evitar duplicados simples
+    let existe = gastos.some(g =>
+        g.monto === gasto.monto &&
+        g.nombre === gasto.nombre
+    );
 
-  if(texto.includes("COPEC")) return "Copec";
-  if(texto.includes("SHELL")) return "Shell";
-  if(texto.includes("SODIMAC")) return "Sodimac";
-  if(texto.includes("LIDER")) return "Lider";
-
-  return "Boleta";
-}
-
-function duplicado(monto,negocio){
-
-  return gastos.some(g=>
-    g.monto === monto && g.negocio === negocio
-  );
-}
-
-
-document.getElementById("fileInput").addEventListener("change", async function(e){
-
-  const archivo = e.target.files[0];
-
-  if(!archivo) return;
-
-  const reader = new FileReader();
-
-  reader.onload = async function(){
-
-    const imagen = reader.result;
-
-    loading.innerText = "⏳ Leyendo boleta...";
-
-    const resultado = await Tesseract.recognize(imagen,'spa');
-
-    const texto = resultado.data.text;
-
-    const monto = detectarMonto(texto);
-    const negocio = detectarNegocio(texto);
-    const categoria = detectarCategoria(texto);
-
-    const fecha = new Date().toLocaleDateString('es-CL');
-
-    if(duplicado(monto,negocio)){
-      alert("⚠️ Posible boleta duplicada");
-      loading.innerText = "";
-      return;
+    if(existe){
+        alert("Esta boleta ya fue agregada");
+        return;
     }
 
-    gastos.unshift({
-      imagen,
-      monto,
-      negocio,
-      categoria,
-      fecha
+    gastos.push({
+        id:Date.now(),
+        nombre:gasto.nombre,
+        monto:gasto.monto
     });
 
     guardar();
     mostrar();
-
-    loading.innerText = "✅ Boleta registrada";
-
-    setTimeout(()=>{
-      loading.innerText = "";
-    },2000);
-
-  }
-
-  reader.readAsDataURL(archivo);
-
-});
-
-async function nuevaRendicion(){
-
-  const nombre = prompt("Nombre de la nueva rendición");
-
-  if(!nombre) return;
-
-  if(confirm("¿Deseas borrar la rendición actual y comenzar una nueva?")){
-
-    gastos = [];
-
-    localStorage.removeItem("gastos");
-
-    localStorage.setItem("rendicionNombre", nombre);
-
-    document.getElementById("nombreRendicion").innerText = nombre;
-
-    mostrar();
-
-    alert("✅ Nueva rendición creada");
-  }
 }
 
-function compartirResumen(){
+function eliminar(id){
 
-  let texto = "🧾 Rendición de Gastos\n\n";
+    gastos = gastos.filter(g => g.id !== id);
 
-  let total = 0;
+    guardar();
+    mostrar();
+}
 
-  gastos.forEach(g=>{
-    texto += `${g.negocio} - $${g.monto.toLocaleString('es-CL')}\n`;
-    total += g.monto;
-  });
+function mostrar(){
 
-  texto += `\nTOTAL: $${total.toLocaleString('es-CL')}`;
+    let lista = document.getElementById("lista");
+    let total = 0;
 
-  if(navigator.share){
-    navigator.share({
-      title:"Rendición",
-      text:texto
+    lista.innerHTML = "";
+
+    gastos.forEach(g=>{
+
+        total += g.monto;
+
+        lista.innerHTML += `
+        <div class="item">
+            <div>
+                <strong>${g.nombre}</strong><br>
+                $${g.monto.toLocaleString("es-CL")}
+            </div>
+
+            <button class="eliminar"
+            onclick="eliminar(${g.id})">
+            ✖
+            </button>
+        </div>
+        `;
     });
-  }else{
-    alert(texto);
-  }
+
+    document.getElementById("total").innerText =
+    "$" + total.toLocaleString("es-CL");
+}
+
+async function escanearBoleta(){
+
+  let input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.capture = "environment";
+
+  input.onchange = async e => {
+
+    let file = e.target.files[0];
+    if(!file) return;
+
+    document.getElementById("estado").innerText =
+      "⏳ Leyendo boleta...";
+
+    try{
+
+      const { data:{ text } } =
+      await Tesseract.recognize(
+        file,
+        "spa",
+        {
+          logger:m=>console.log(m)
+        }
+      );
+
+      console.log(text);
+
+      let numeros =
+      text.match(/\$?\s?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?/g);
+
+      if(!numeros || numeros.length===0){
+        alert("No encontré montos");
+        document.getElementById("estado").innerText="";
+        return;
+      }
+
+      let montos = numeros.map(n=>{
+        return parseInt(
+          n.replace(/\$/g,"")
+           .replace(/\./g,"")
+           .replace(/,/g,"")
+           .trim()
+        );
+      }).filter(n=>n>100);
+
+      let total = Math.max(...montos);
+
+      agregarGasto({
+        nombre:"Boleta",
+        monto:total
+      });
+
+      document.getElementById("estado").innerText =
+        "✅ Boleta agregada";
+
+    }catch(err){
+
+      console.log(err);
+
+      alert("Error leyendo boleta");
+
+      document.getElementById("estado").innerText="";
+    }
+  };
+
+  input.click();
+}
+
+function compartir(){
+
+    let texto = "📋 Rendición de Gastos\n\n";
+
+    gastos.forEach(g=>{
+        texto += `${g.nombre}: $${g.monto.toLocaleString("es-CL")}\n`;
+    });
+
+    let total = gastos.reduce((a,b)=>a+b.monto,0);
+
+    texto += `\nTOTAL: $${total.toLocaleString("es-CL")}`;
+
+    navigator.share({
+        title:"Rendix",
+        text:texto
+    });
 }
 
 </script>
